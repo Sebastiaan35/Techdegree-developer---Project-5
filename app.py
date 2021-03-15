@@ -62,7 +62,7 @@ class Journal(UserMixin, Model):
     entry_id = AutoField()
     date_updated = DateTimeField()
     Title = CharField(max_length=255, unique=False)
-    date  = DateTimeField()
+    date  = CharField(max_length=100, unique=False)
     Time_Spent = IntegerField(default=0)
     What_You_Learned = TextField()
     Resources_to_Remember = TextField()
@@ -73,36 +73,41 @@ class Journal(UserMixin, Model):
         """Configuration attributes"""
         database = db
 
-
-    def add_entry(title, learned, remember, tags):
+    @classmethod
+    def add_entry(cls, title, date, Time_Spent, learned, remember, tags):
+        print("add entry starts", 55*"$")
         """Add an entry to database"""
         entry_dict = {}
         entry_dict['date_updated'] = datetime.strftime(datetime.now(),"%m.%d.%Y %H:%M:%S")
         entry_dict['Title'] = title
+        entry_dict['date'] = date
+        entry_dict['Time_Spent'] = Time_Spent
         entry_dict['What_You_Learned'] = learned
         entry_dict['Resources_to_Remember'] = remember
-        entry_dict['date'] = str(datetime.strftime(date.today(),"%m.%d.%Y"))
+
         entry_dict['tags'] = tags
 
-        en_ex = entry_exists(learned)
-
+        en_ex = Journal.entry_exists(learned)
+        print("date updated: ", 55*"*")
+        print(en_ex)
+        print(55*"*")
         if not en_ex:
             ##product does not exist
-            Journal.create(**entry_dict)
+            cls.create(**entry_dict)
             print(f"\nA new entry was added to the database:\n"
-                  f"Title: {title} Learned: {learned} Remember: {remember}\n")
+                  f"Title: {title} Date: {date} Time Spent: {Time_Spent} Learned: {learned} Remember: {remember}\n")
         else:
             ##product is newer or has same date_updated
-            print(f"The following entry was already added to the database at {entry_exists(learned)}.\n"
-            f"Title: {title} | Learned: {learned} | Remember: {remember}")
-            if entry_dict['date_updated'] >= en_ex:
-
-                #Keep original creation date (retrieve from previous entry and enter in entry_dict)
-                entry = Journal.select().where(Journal.What_You_Learned == learned)
-                entry_dict['date'] = entry.date
-
-                delete_entry(stringy)
-                Journal.create(**entry_dict)
+            print(f"The following entry was already added to the database at {Journal.entry_exists(learned)}.\n"
+            f"Title: {title} | Date: {date} | Time Spent: {Time_Spent} | Learned: {learned} | Remember: {remember}")
+            # if entry_dict['date_updated'] >= en_ex:
+            #
+            #     # #Keep original creation date (retrieve from previous entry and enter in entry_dict)
+            #     # entry = Journal.select().where(Journal.What_You_Learned == learned)
+            #     # entry_dict['date'] = entry.date
+            #
+            #     Journal.delete_entry(learned)
+            #     cls.create(**entry_dict)
             #     print(f"\nAn entry was replaced in the database:\n"
             #           f"{stringy}\n")
 
@@ -115,13 +120,17 @@ class Journal(UserMixin, Model):
     def entry_exists(What_You_Learned):
         """Check if entry already in database"""
         #Returns none if not in database; Returns date last updated if it is as datetime
-        entries = Journal.select().order_by(Journal.date_updated.desc())
-        entries = entries.where(Journal.What_You_Learned == What_You_Learned)
 
-        if len(entries) > 0:
+        try:
+            entries = Journal.select().where(Journal.What_You_Learned == What_You_Learned).order_by(Journal.date_updated.desc())
             return list(entries)[0].date_updated
-        else:
+        except Exception as e:
+            print(e)
             return None
+        # if len(entries) > 0:
+        #     return list(entries)[0].date_updated
+        # else:
+        #     return None
 
 
     def view_entries():
@@ -148,9 +157,12 @@ class Journal(UserMixin, Model):
 
 
 # / - Known as the root page, homepage, landing page but will act as the Listing route.
+# /entries - Also will act as the Listing route just like /
 @app.route('/')
+@app.route('/entries')
 def index():
-    stream = Journal.select().limit(100)
+    stream = Journal.select().order_by(Journal.date_updated.desc())
+    # stream = Journal.select().limit(100)
     # datetime.strftime(datetime.strptime(entry.date,"%m.%d.%Y"),'%B %-d %Y')
 
     return render_template('index.html', stream=stream)
@@ -180,9 +192,10 @@ def initialize():
 
 if __name__ == '__main__':
     initialize()
+    Journal.add_entry("My muesli", "March 14th", 5, "Pineapple", "Healthy", "food, fruit")
+    # Journal.add_entry("My work", "March 15th", 240, "Car", "Drive safely", "transportation, mobility")
     app.run(debug=DEBUG, host=HOST, port=PORT)
 
-    # add_entry("My muesli", "Pineapple", "Healthy", "food, fruit")
     # add_entry("Breakfast", "Sausage", "soso", "food, fruit")
     # add_entry("My work", "Car", "Drive safely", "transportation, mobility")
     # print(55*"*")
