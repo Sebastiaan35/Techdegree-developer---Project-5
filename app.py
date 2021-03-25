@@ -1,25 +1,14 @@
 #!/usr/bin/env python3
-# import models
-
-from datetime import date, datetime
-
-from peewee import (
-    Model,
-    AutoField,
-    TextField,
-    IntegerField,
-    DateTimeField,
-    CharField,
-    SqliteDatabase)
+import models
+import forms
 
 from flask import (Flask, g, render_template, flash, redirect, url_for,
                   abort)
 
 from flask_bcrypt import check_password_hash
-from flask_login import (UserMixin, LoginManager, login_user, logout_user,
+from flask_login import (LoginManager, login_user, logout_user,
                              login_required, current_user)
 
-#Route
 DEBUG = True
 PORT = 8000
 HOST = '127.0.0.1'
@@ -42,7 +31,7 @@ def load_user(entryid):
 @app.before_request
 def before_request():
     """Connect to the database before each request."""
-    g.db = db
+    g.db = models.db
     g.db.connect()
     g.user = current_user
 
@@ -54,106 +43,9 @@ def after_request(response):
     return response
 
 
-# --- database part ---
-db = SqliteDatabase('journal.db')
-
-class Journal(UserMixin, Model):
-    """Define product categories"""
-    entry_id = AutoField()
-    date_updated = DateTimeField()
-    Title = CharField(max_length=255, unique=False)
-    date  = CharField(max_length=100, unique=False)
-    Time_Spent = IntegerField(default=0)
-    What_You_Learned = TextField()
-    Resources_to_Remember = TextField()
-    tags =  CharField(max_length=255, unique=False)
-
-
-    class Meta:
-        """Configuration attributes"""
-        database = db
-
-    @classmethod
-    def add_entry(cls, title, date, Time_Spent, learned, remember, tags):
-        print("add entry starts", 55*"$")
-        """Add an entry to database"""
-        entry_dict = {}
-        entry_dict['date_updated'] = datetime.strftime(datetime.now(),"%m.%d.%Y %H:%M:%S")
-        entry_dict['Title'] = title
-        entry_dict['date'] = date
-        entry_dict['Time_Spent'] = Time_Spent
-        entry_dict['What_You_Learned'] = learned
-        entry_dict['Resources_to_Remember'] = remember
-
-        entry_dict['tags'] = tags
-
-        en_ex = Journal.entry_exists(learned)
-        print("date updated: ", 55*"*")
-        print(en_ex)
-        print(55*"*")
-        if not en_ex:
-            ##product does not exist
-            cls.create(**entry_dict)
-            print(f"\nA new entry was added to the database:\n"
-                  f"Title: {title} Date: {date} Time Spent: {Time_Spent} Learned: {learned} Remember: {remember}\n")
-        else:
-            ##product is newer or has same date_updated
-            print(f"The following entry was already added to the database at {Journal.entry_exists(learned)}.\n"
-            f"Title: {title} | Date: {date} | Time Spent: {Time_Spent} | Learned: {learned} | Remember: {remember}")
-            # if entry_dict['date_updated'] >= en_ex:
-            #
-            #     # #Keep original creation date (retrieve from previous entry and enter in entry_dict)
-            #     # entry = Journal.select().where(Journal.What_You_Learned == learned)
-            #     # entry_dict['date'] = entry.date
-            #
-            #     Journal.delete_entry(learned)
-            #     cls.create(**entry_dict)
-            #     print(f"\nAn entry was replaced in the database:\n"
-            #           f"{stringy}\n")
-
-    def delete_entry(What_You_Learned):
-        """Delete product from database"""
-        entry = Journal.get(Journal.What_You_Learned == What_You_Learned)
-        entry.delete_instance()
-
-
-    def entry_exists(What_You_Learned):
-        """Check if entry already in database"""
-        #Returns none if not in database; Returns date last updated if it is as datetime
-
-        try:
-            entries = Journal.select().where(Journal.What_You_Learned == What_You_Learned).order_by(Journal.date_updated.desc())
-            return list(entries)[0].date_updated
-        except Exception as e:
-            print(e)
-            return None
-        # if len(entries) > 0:
-        #     return list(entries)[0].date_updated
-        # else:
-        #     return None
-
-
-    def view_entries():
-        entries = Journal.select().order_by(Journal.date_updated.desc())
-        print("\nThe following entries are currently in the database:\n")
-        for entry in entries:
-            print(f"{entry.date_updated}: {entry.What_You_Learned} | Tags: {entry.tags}")
-
-
-    def retrieve_by_tag(tagy):
-        # entries = Journal.select().order_by(Journal.tags)
-        #Does not work either
-        # entries = entries.where(tagy in Journal.tags)
-        # Does not work:
-        entries = Journal.select().where(Journal.tags.contains(f"{tagy}"))
-
-        print(f"\nThe following entries have the tag '{tagy}':\n")
-        for entry in entries:
-            # listy = entry.tags.split(', ')
-            # if tagy in listy:
-            #     print(f"{entry.date_updated} - {entry.What_You_Learned} - {entry.tags}")
-            print(f"{entry.date_updated} - {entry.What_You_Learned} - {entry.tags}")
-# --- database part --- END ---
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('404.html'), 404
 
 
 # / - Known as the root page, homepage, landing page but will act as the Listing route.
@@ -161,44 +53,88 @@ class Journal(UserMixin, Model):
 @app.route('/')
 @app.route('/entries')
 def index():
-    stream = Journal.select().order_by(Journal.date_updated.desc())
-    # stream = Journal.select().limit(100)
-    # datetime.strftime(datetime.strptime(entry.date,"%m.%d.%Y"),'%B %-d %Y')
-
+    stream = models.Journal.select().order_by(models.Journal.date_updated.desc())
     return render_template('index.html', stream=stream)
 
-# /entries - Also will act as the Listing route just like /
-@app.route('/entries')
+
+@app.route('/tag/<tag>')
+def Retrieve_By_Tag(tag=None):
+    stream = models.Journal.select().where(models.Journal.tags.contains(f"{tag}"))
+    return render_template('index.html', stream=stream)
+
 
 # /entries/new - The Create route
-@app.route('/entries/new')
+# @app.route('/new', methods=('GET', 'POST'))
+@app.route('/entries/new', methods=('GET', 'POST'))
+def Create_Entry():
+    form = forms.neform()
+    if form.validate_on_submit():
+        flash("Yay, you made an entry!", "success")
+        #
+        models.Journal.add_entry(
+        form.Title.data.strip(),
+        form.date.data,
+        form.Time_Spent.data,
+        form.What_You_Learned.data.strip(),
+        form.Resources_to_Remember.data.strip(),
+        form.tags.data.strip(),
+    )
+        return redirect(url_for('index'))
+    return render_template('new.html', form=form)
+
 
 # /entries/<id> - The Detail route
 @app.route('/entries/<id>')
+def detail(id=None):
+    try:
+        Detailed_Entry = models.Journal.select().where(models.Journal.entry_id == id)
+    except models.DoesNotExist:
+        abort(404)
+    return render_template('detail.html', entry=Detailed_Entry[0])
+
 
 # /entries/<id>/edit - The Edit or Update route
-@app.route('/entries/<id>/edit')
+@app.route('/entries/<int:id>/edit', methods=('GET', 'POST'))
+def edit(id=None):
+    form = forms.neform()
+    try:
+        Detailed_Entry = models.Journal.select().where(models.Journal.entry_id == id)[0]
+    except models.DoesNotExist:
+        abort(404)
+    # Fill form
+    if form.validate_on_submit():
+        # models.Journal.add_entry(
+        Detailed_Entry.Title = form.Title.data.strip()
+        Detailed_Entry.date = form.date.data
+        Detailed_Entry.Time_Spent = form.Time_Spent.data
+        Detailed_Entry.What_You_Learned = form.What_You_Learned.data.strip()
+        Detailed_Entry.Resources_to_Remember = form.Resources_to_Remember.data.strip()
+        Detailed_Entry.tags = form.tags.data.strip()
+        Detailed_Entry.save()
+        flash('Update successful', 'success')
+        # Return to detail page
+        return redirect(url_for('detail', id=id))
+    else:
+        form.Title.data = Detailed_Entry.Title
+        form.date.data = Detailed_Entry.date
+        form.Time_Spent.data = Detailed_Entry.Time_Spent
+        form.What_You_Learned.data = Detailed_Entry.What_You_Learned
+        form.Resources_to_Remember.data = Detailed_Entry.Resources_to_Remember
+        form.tags.data = Detailed_Entry.tags
+    return render_template('edit.html', form=form, id=id)
+
 
 # /entries/<id>/delete - Delete route
 @app.route('/entries/<id>/delete')
-
-
-def initialize():
-    """Create the database if it doesn't exist"""
-    db.connect()
-    db.create_tables([Journal], safe=True)
-    db.close()
-
+def delete(id=None):
+    Detailed_Entry = models.Journal.get(models.Journal.entry_id == id)
+    Detailed_Entry.delete_instance()
+    # Detailed_Entry.save()
+    flash('Entry deleted', 'success')
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    initialize()
-    Journal.add_entry("My muesli", "March 14th", 5, "Pineapple", "Healthy", "food, fruit")
-    # Journal.add_entry("My work", "March 15th", 240, "Car", "Drive safely", "transportation, mobility")
-    app.run(debug=DEBUG, host=HOST, port=PORT)
-
-    # add_entry("Breakfast", "Sausage", "soso", "food, fruit")
-    # add_entry("My work", "Car", "Drive safely", "transportation, mobility")
-    # print(55*"*")
-    # view_entries()
-    # print(55*"*")
-    # retrieve_by_tag("transportation")
+    models.initialize()
+    models.Journal.add_entry("My muesli", "2021-03-18", 5, "Pineapple", "Healthy", "food, fruit")
+    models.Journal.add_entry("My work", "2021-03-22", 240, "Car\nBikes\nBern", "Drive safely\nWatch Out\nGet up in time", "transportation, mobility")
+    app.run(debug=DEBUG, host=HOST, port=PORT, use_reloader=False)
