@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import models
 import forms
+import sys
 
 from flask import (Flask, g, render_template, flash, redirect, url_for,
                   abort)
@@ -14,6 +15,10 @@ PORT = 8000
 HOST = '127.0.0.1'
 
 app = Flask(__name__)
+
+app.logger.addHandler(logging.StreamHandler(sys.stdout))
+app.logger.setLevel(logging.ERROR)
+
 app.secret_key = 'wtlejlp[y6uogdrHJKphplrpjh[rpjh[r]]]%$R^&Y(1013r9fjlfqefgklejm)'
 
 login_manager = LoginManager()
