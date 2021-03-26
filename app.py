@@ -137,4 +137,4 @@ if __name__ == '__main__':
     models.initialize()
     models.Journal.add_entry("My muesli", "2021-03-18", 5, "Pineapple", "Healthy", "food, fruit")
     models.Journal.add_entry("My work", "2021-03-22", 240, "Car\nBikes\nBern", "Drive safely\nWatch Out\nGet up in time", "transportation, mobility")
-    app.run(threaded=True, port=5000)
+    app.run(threaded=True)
