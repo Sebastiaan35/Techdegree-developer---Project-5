@@ -2,6 +2,7 @@
 import models
 import forms
 import sys
+import logging
 
 from flask import (Flask, g, render_template, flash, redirect, url_for,
                   abort)
