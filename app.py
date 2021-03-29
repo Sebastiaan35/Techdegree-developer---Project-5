@@ -26,7 +26,7 @@ login_manager.login_view = 'login'
 def load_user(userid):
     try:
         return models.User.get(models.User.id == userid)
-    except:
+    except models.DoesNotExist:
         return None
 
 
@@ -70,7 +70,7 @@ def login():
     if form.validate_on_submit():
         try:
             user = models.User.get(models.User.email == form.email.data)
-        except:
+        except models.DoesNotExist:
             flash("Your email or password doesn't match!", "error")
         else:
             if check_password_hash(user.password, form.password.data):
@@ -132,7 +132,7 @@ def Create_Entry():
 def detail(id=None):
     try:
         Detailed_Entry = models.Journal.select().where(models.Journal.entry_id == id)
-    except:
+    except models.DoesNotExist:
         abort(404)
     return render_template('detail.html', entry=Detailed_Entry[0])
 
@@ -145,13 +145,9 @@ def edit(id=None):
     try:
         Detailed_Entry = models.Journal.get(models.Journal.entry_id == id)
         if current_user.username != Detailed_Entry.owner and current_user.is_admin == False:
-            print(44*"$")
-            print(Detailed_Entry)
-            print(44*"$")
             flash("Updating of other people's entries is not allowed.", 'Success')
             return redirect(url_for('detail', id=Detailed_Entry))
-
-    except:
+    except models.DoesNotExist:
         abort(404)
     # Fill form
     if form.validate_on_submit():
@@ -202,4 +198,5 @@ if __name__ == '__main__':
         )
     except ValueError:
         pass
+
     app.run(threaded=True, use_reloader=False)
