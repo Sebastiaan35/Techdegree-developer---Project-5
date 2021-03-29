@@ -12,5 +12,9 @@
         <input type="submit" value="Publish Entry" class="button">
         <a href="{{ url_for('detail', id=id) }}" class="button button-secondary">Cancel</a>
     </form>
+    {% if not current_user.is_authenticated %}
+      <h2>not authenticated</h2>
+      <br><br><br><br><br><br><br>
+    {% endif %}
   </div>
 {% endblock %}

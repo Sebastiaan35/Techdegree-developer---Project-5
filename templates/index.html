@@ -11,7 +11,7 @@
                   <i><a href="{{ url_for('Retrieve_By_Tag', tag=tag) }}">{{ tag }}</a></i>
                 {% endfor %}
                 <br><br>
-                <time datetime="{{ entry.date }}">Date: {{ entry.date }}</time>
+                <time datetime="{{ entry.date }}">Date: {{ entry.date }}</time> - By: {{ entry.owner }}
         </article>
     {% endfor %}
 

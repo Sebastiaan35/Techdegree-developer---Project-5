@@ -26,9 +26,13 @@
                               <h3>Resources to Remember:</h3>
                               <ul>
                                 {% if entry.Resources_to_Remember %}
-                                       {% for line in entry.Resources_to_Remember.split('\n') %}
-                                           <li><a href="#">{{ line }}</a></li>
-                                       {% endfor %}
+                                  {% for line in entry.Resources_to_Remember.split('\n') %}
+                                    {% if line.find('http') > -1 or line.find('www.') > -1 %}
+                                      <li><a href="{{ line }}">{{ line }}</a></li>
+                                    {% else %}
+                                      <li>{{ line }}</li>
+                                    {% endif %}
+                                  {% endfor %}
                                 {% endif %}
                               </ul>
                           </div>
@@ -36,13 +40,14 @@
                               <h3>Tags:</h3>
                                 <p>{{ entry.tags }}</p>
                           </div>
-                      </article><br><br><br>
-
-              <div class="edit">
-                  <p><a href="{{ url_for('edit', id=entry.entry_id) }}">Edit Entry</a></p>
-              </div>
-              <div class="delete">
-              <p><a href="{{ url_for('delete', id=entry.entry_id) }}">Delete Entry</a></p>
-              </div>
+                          <div class="entry">
+                                <i>Author: {{ entry.owner }}</i>
+                          </div>
+                      </article>
   </div>
+{% endblock %}
+
+{% block detail2 %}
+<a class="button icon-left" href="{{ url_for('edit', id=entry.entry_id) }}"><span>Edit Entry</span> <i class="material-icons">add</i></a><br><pre class="tab">      </pre>
+<a class="button icon-left" href="{{ url_for('delete', id=entry.entry_id) }}"><span>Delete Entry</span> <i class="material-icons">add</i></a><br><pre class="tab">      </pre>
 {% endblock %}
