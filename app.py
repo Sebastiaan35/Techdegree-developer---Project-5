@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import models
 import forms
+import sys
+import logging
 
 from flask import (Flask, g, render_template, flash, redirect, url_for,
                   abort)
@@ -8,11 +10,12 @@ from flask_bcrypt import check_password_hash
 from flask_login import (LoginManager, login_user, logout_user,
                         login_required, current_user)
 
-DEBUG = True
-PORT = 8000
-HOST = '127.0.0.1'
 
 app = Flask(__name__)
+
+app.logger.addHandler(logging.StreamHandler(sys.stdout))
+app.logger.setLevel(logging.ERROR)
+
 app.secret_key = 'wtlejlp[y6uogdrHJKphplrpjh[rpjh[r]]]%$R^&Y(1013r9fjlfqefgklejm)'
 
 login_manager = LoginManager()
@@ -199,5 +202,4 @@ if __name__ == '__main__':
         )
     except ValueError:
         pass
-
-    app.run(debug=DEBUG, host=HOST, port=PORT, use_reloader=False)
+    app.run(threaded=True, use_reloader=False)
