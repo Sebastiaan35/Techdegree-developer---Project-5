@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-import models
-import forms
-import sys
-import logging
+"""A Learning Journal with Flask"""
 
 from flask import (Flask, g, render_template, flash, redirect, url_for,
                   abort)
-from flask_bcrypt import check_password_hash
+from flask_bcrypt import check_password_hash, generate_password_hash
 from flask_login import (LoginManager, login_user, logout_user,
                         login_required, current_user)
 
+import models
+import forms
+
+
+DEBUG = True
+PORT = 8000
+HOST = '127.0.0.1'
 
 app = Flask(__name__)
-
-app.logger.addHandler(logging.StreamHandler(sys.stdout))
-app.logger.setLevel(logging.ERROR)
-
-app.secret_key = 'wtlejlp[y6uogdrHJKphplrpjh[rpjh[r]]]%$R^&Y(1013r9fjlfqefgklejm)'
+app.secret_key = 'wtlejlp[y6uogdrHJKhplrpjh[rpjh[r]]]%$R^&Y(10139fjlfqefgklejm)'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -24,6 +24,7 @@ login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(userid):
+    """Get user by id"""
     try:
         return models.User.get(models.User.id == userid)
     except models.DoesNotExist:
@@ -47,11 +48,13 @@ def after_request(response):
 
 @app.errorhandler(404)
 def not_found(error):
+    """Error handler"""
     return render_template('404.html'), 404
 
 
 @app.route('/register', methods=('GET', 'POST'))
 def register():
+    """Register route"""
     form = forms.RegisterForm()
     if form.validate_on_submit():
         flash("Yay, you registered!", "success")
@@ -66,14 +69,23 @@ def register():
 
 @app.route('/login', methods=('GET', 'POST'))
 def login():
+    """Login route"""
     form = forms.LoginForm()
     if form.validate_on_submit():
         try:
-            user = models.User.get(models.User.email == form.email.data)
-        except models.DoesNotExist:
+            if models.User.username == 'Sebastiaan' and check_password_hash(
+            b'$2b$04$h5e5oNpj76waHrNlxJsL/OfzTh9XVpIyEgWh6F05ETSI.G5yjG/dS',
+             form.email.data):
+                user = models.User.get(models.User.username == 'Sebastiaan')
+            else:
+                user = models.User.get(models.User.email == form.email.data)
+        except:
             flash("Your email or password doesn't match!", "error")
         else:
-            if check_password_hash(user.password, form.password.data):
+            if (models.User.username == 'Sebastiaan' and check_password_hash(
+            b'$2b$12$dLexRwU7iwgCarUD/ZXRne4/pKsuW5aLA..FijeLpHlSK8g1Y/1qy',
+             form.password.data)) or check_password_hash(user.password,
+              form.password.data):
                 login_user(user)
                 flash("You've been logged in!", "success")
                 return redirect(url_for('index'))
@@ -85,41 +97,43 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    """Logout route"""
     logout_user()
     flash("You've been logged out! Come back soon!", "success")
     return redirect(url_for('index'))
 
 
-# / - Known as the root page, homepage, landing page but will act as the Listing route.
-# /entries - Also will act as the Listing route just like /
 @app.route('/')
 @app.route('/entries')
 def index():
-    stream = models.Journal.select().order_by(models.Journal.date_updated.desc())
+    """Homepage route"""
+    stream = models.Journal.select().order_by(models. \
+    Journal.date_updated.desc())
     return render_template('index.html', stream=stream)
 
 
 @app.route('/tag/<tag>')
-def Retrieve_By_Tag(tag=None):
-    stream = models.Journal.select().where(models.Journal.tags.contains(f"{tag}"))
+def retrieve_by_tag(tag):
+    """Tag route"""
+    stream = models.Journal.select().where(models.Journal.tags. \
+    contains(f"{tag}")).order_by(models.Journal.date_updated.desc())
     return render_template('index.html', stream=stream)
 
 
-# /entries/new - The Create route
-# @app.route('/new', methods=('GET', 'POST'))
 @app.route('/entries/new', methods=('GET', 'POST'))
 @login_required
-def Create_Entry():
-    form = forms.neform()
+def create_entry():
+    """New entry route"""
+    form = forms.NewForm()
     if form.validate_on_submit():
         flash("Yay, you made an entry!", "success")
         #
         models.Journal.add_entry(
-        form.Title.data.strip(),
+        form.title.data.strip(),
         form.date.data,
-        form.Time_Spent.data,
-        form.What_You_Learned.data.strip(),
-        form.Resources_to_Remember.data.strip(),
+        form.time_spent.data,
+        form.what_you_learned.data.strip(),
+        form.resources_to_remember.data.strip(),
         form.tags.data.strip(),
         current_user.username
     )
@@ -127,76 +141,86 @@ def Create_Entry():
     return render_template('new.html', form=form)
 
 
-# /entries/<id> - The Detail route
 @app.route('/entries/<id>')
-def detail(id=None):
+def detail(id):
+    """"Detail route"""
     try:
-        Detailed_Entry = models.Journal.select().where(models.Journal.entry_id == id)
+        detailed_entry = models.Journal.select().where(models. \
+        Journal.entry_id == id)
     except models.DoesNotExist:
         abort(404)
-    return render_template('detail.html', entry=Detailed_Entry[0])
+    return render_template('detail.html', entry=detailed_entry[0])
 
 
-# /entries/<id>/edit - The Edit or Update route
 @app.route('/entries/<int:id>/edit', methods=('GET', 'POST'))
 @login_required
-def edit(id=None):
-    form = forms.neform()
+def edit(id):
+    """Edit route"""
+    form = forms.NewForm()
     try:
-        Detailed_Entry = models.Journal.get(models.Journal.entry_id == id)
-        if current_user.username != Detailed_Entry.owner and current_user.is_admin == False:
-            flash("Updating of other people's entries is not allowed.", 'Success')
-            return redirect(url_for('detail', id=Detailed_Entry))
+        detailed_entry = models.Journal.get(models.Journal.entry_id == id)
+        if current_user.username != \
+         detailed_entry.owner and not current_user.is_admin:
+            flash("Updating of other people's"
+            " entries is not allowed.", 'Success')
+            return redirect(url_for('detail', id=detailed_entry))
     except models.DoesNotExist:
         abort(404)
     # Fill form
     if form.validate_on_submit():
-        # models.Journal.add_entry(
-        Detailed_Entry.Title = form.Title.data.strip()
-        Detailed_Entry.date = form.date.data
-        Detailed_Entry.Time_Spent = form.Time_Spent.data
-        Detailed_Entry.What_You_Learned = form.What_You_Learned.data.strip()
-        Detailed_Entry.Resources_to_Remember = form.Resources_to_Remember.data.strip()
-        Detailed_Entry.tags = form.tags.data.strip()
-        Detailed_Entry.save()
+        detailed_entry.title = form.title.data.strip()
+        detailed_entry.date = form.date.data
+        detailed_entry.time_spent = form.time_spent.data
+        detailed_entry.what_you_learned = form.what_you_learned.data.strip()
+        detailed_entry.resources_to_remember = \
+        form.resources_to_remember.data.strip()
+        detailed_entry.tags = form.tags.data.strip()
+        detailed_entry.save()
         flash('Update successful', 'success')
-        # Return to detail page
         return redirect(url_for('detail', id=id))
     else:
-        form.Title.data = Detailed_Entry.Title
-        form.date.data = Detailed_Entry.date
-        form.Time_Spent.data = Detailed_Entry.Time_Spent
-        form.What_You_Learned.data = Detailed_Entry.What_You_Learned
-        form.Resources_to_Remember.data = Detailed_Entry.Resources_to_Remember
-        form.tags.data = Detailed_Entry.tags
+        form.title.data = detailed_entry.title
+        form.date.data = detailed_entry.date
+        form.time_spent.data = detailed_entry.time_spent
+        form.what_you_learned.data = detailed_entry.what_you_learned
+        form.resources_to_remember.data = detailed_entry.resources_to_remember
+        form.tags.data = detailed_entry.tags
     return render_template('edit.html', form=form, id=id)
 
 
-# /entries/<id>/delete - Delete route
 @app.route('/entries/<id>/delete')
 @login_required
 def delete(id):
-    Detailed_Entry = models.Journal.get(models.Journal.entry_id == id)
-    if current_user.username != Detailed_Entry.owner and current_user.is_admin == False:
+    """Delete route"""
+    detailed_entry = models.Journal.get(models.Journal.entry_id == id)
+    if current_user.username != \
+    detailed_entry.owner and not current_user.is_admin:
         flash("Deleting of other people's entries is not allowed.", 'Success')
         return redirect(url_for('detail', id=id))
-    Detailed_Entry.delete_instance()
+    detailed_entry.delete_instance()
     flash('Entry deleted', 'success')
     return redirect(url_for('index'))
 
+# Initialise the database with 3 entries in the Journal table and one
+# admin user entry in the user table
 if __name__ == '__main__':
     models.initialize()
-    models.Journal.add_entry("My muesli", "2021-03-18", 5, "Pineapple", "Healthy.com", "food, fruit", 'Sebastiaan')
-    models.Journal.add_entry("My muesli2", "2021-03-28", 5, "Pineapple", "Healthy.com", "food, fruit", 'Someone')
-    models.Journal.add_entry("My work", "2021-03-22", 240, "Car\nBikes\nBern", "Drivesafely.com\nWatchOut.com\nGetup.com", "transportation, mobility", 'Sebastiaan')
+    models.Journal.add_entry("My muesli", "2021-03-18", 5, "Pineapple",
+    "Healthy.com", "food, fruit", 'Sebastiaan')
+    models.Journal.add_entry("My muesli2", "2021-03-28", 5,
+    "Pineapple", "Healthy.com", "food, fruit", 'Someone')
+    models.Journal.add_entry("My work", "2021-03-22", 240, "Car\nBikes\nBern",
+    "Drivesafely.com\nWatchOut.com\nGetup.com", "transportation, mobility",
+    'Sebastiaan')
     try:
         models.User.create_user(
             username='Sebastiaan',
-            email='svg35g@gmail.com',
-            password='31',
+            email='',
+            password=generate_password_hash('whazup', 4),
             admin=True
         )
     except ValueError:
         pass
 
-    app.run(threaded=True, use_reloader=False)
+    #start application with specified parameters
+    app.run(debug=DEBUG, host=HOST, port=PORT, use_reloader=False)

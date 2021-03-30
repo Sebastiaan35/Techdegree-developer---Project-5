@@ -1,23 +1,28 @@
+#!/usr/bin/env python3
+"""The forms part"""
+
 from flask_wtf import FlaskForm as Form
-from wtforms import StringField, PasswordField, DateField, IntegerField, TextAreaField
+from wtforms import StringField, PasswordField, IntegerField, TextAreaField
 from wtforms.validators import (DataRequired, Regexp, ValidationError, Email,
                                Length, EqualTo)
 
-from models import Journal
 from models import User
 
 #The register and login code is based on the Treehouse course building a social network with Flask
 def name_exists(form, field):
+    """Check if username already in database"""
     if User.select().where(User.username == field.data).exists():
         raise ValidationError('User with that name already exists.')
 
 
 def email_exists(form, field):
+    """Check if email address already in database"""
     if User.select().where(User.email == field.data).exists():
         raise ValidationError('User with that email already exists.')
 
 
 class RegisterForm(Form):
+    """The registration form"""
     username = StringField(
         'Username',
         validators=[
@@ -50,14 +55,16 @@ class RegisterForm(Form):
 
 
 class LoginForm(Form):
+    """The login form"""
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
 
 
-class neform(Form):
-    Title = StringField("Title", validators=[DataRequired()])
+class NewForm(Form):
+    """New entry form"""
+    title = StringField("title", validators=[DataRequired()])
     date  = StringField("Date", validators=[DataRequired()])
-    Time_Spent = IntegerField("Time spent (hours as int)", validators=[DataRequired()])
-    What_You_Learned = TextAreaField("Learned", validators=[DataRequired()])
-    Resources_to_Remember = TextAreaField("To Remember", validators=[DataRequired()])
+    time_spent = IntegerField("Time spent (hours as int)", validators=[DataRequired()])
+    what_you_learned = TextAreaField("Learned", validators=[DataRequired()])
+    resources_to_remember = TextAreaField("To Remember", validators=[DataRequired()])
     tags = StringField("tags (as csv)", validators=[DataRequired()])

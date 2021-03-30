@@ -22,7 +22,7 @@
                     <div class="site-header">
                       {% if current_user.is_authenticated %}
                       <h5 style="text-align:right">Logged in: {{ current_user.username }}</h5>
-                      <a class="button icon-left" href="{{ url_for('Create_Entry')}}"><span>New Entry</span> <i class="material-icons">add</i></a><br><pre class="tab">      </pre>
+                      <a class="button icon-left" href="{{ url_for('create_entry')}}"><span>New Entry</span> <i class="material-icons">add</i></a><br><pre class="tab">      </pre>
                       {% block detail2 %}{% endblock %}
                       <a class="button icon-right" href="{{ url_for('logout') }}"><span>Logout</span> <i class="material-icons">add</i></a><br><pre class="tab">      </pre>
                       {% else %}
