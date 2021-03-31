@@ -80,7 +80,7 @@ def login():
             else:
                 user = models.User.get(models.User.email == form.email.data)
         except:
-            flash("Your email or password doesn't match!", "error")
+            flash("Your email or password doesn't match!", category="error")
         else:
             if (models.User.username == 'Sebastiaan' and check_password_hash(
             b'$2b$12$dLexRwU7iwgCarUD/ZXRne4/pKsuW5aLA..FijeLpHlSK8g1Y/1qy',
@@ -90,7 +90,7 @@ def login():
                 flash("You've been logged in!", "success")
                 return redirect(url_for('index'))
             else:
-                flash("Your email or password doesn't match!", "error")
+                flash("Your email or password doesn't match!", category="error")
     return render_template('login.html', form=form)
 
 
