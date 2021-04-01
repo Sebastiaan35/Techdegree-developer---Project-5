@@ -2,10 +2,10 @@
 """A Learning Journal with Flask"""
 
 from flask import (Flask, g, render_template, flash, redirect, url_for,
-                  abort)
+                   abort)
 from flask_bcrypt import check_password_hash, generate_password_hash
 from flask_login import (LoginManager, login_user, logout_user,
-                        login_required, current_user)
+                         login_required, current_user)
 
 import models
 import forms
@@ -16,11 +16,12 @@ PORT = 8000
 HOST = '127.0.0.1'
 
 app = Flask(__name__)
-app.secret_key = 'wtlejlp[y6uogdrHJKhplrpjh[rpjh[r]]]%$R^&Y(10139fjlfqefgklejm)'
+app.secret_key = 'wtlejlp[y6uogdrHJKhplrpjh[rpjh[r]]%$R^&Y(1013fjlfqefgklejm)'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
 
 @login_manager.user_loader
 def load_user(userid):
@@ -74,23 +75,24 @@ def login():
     if form.validate_on_submit():
         try:
             if models.User.username == 'Sebastiaan' and check_password_hash(
-            b'$2b$04$h5e5oNpj76waHrNlxJsL/OfzTh9XVpIyEgWh6F05ETSI.G5yjG/dS',
-             form.email.data):
+                b'$2b$04$h5e5oNpj76waHrNlxJsL/OfzTh9XVpIyEgWh6F05ETSI.G5yjG/dS',
+                form.email.data):
                 user = models.User.get(models.User.username == 'Sebastiaan')
             else:
                 user = models.User.get(models.User.email == form.email.data)
-        except:
+        except models.DoesNotExist:
             flash("Your email or password doesn't match!", category="error")
         else:
             if (models.User.username == 'Sebastiaan' and check_password_hash(
-            b'$2b$12$dLexRwU7iwgCarUD/ZXRne4/pKsuW5aLA..FijeLpHlSK8g1Y/1qy',
-             form.password.data)) or check_password_hash(user.password,
-              form.password.data):
+                b'$2b$12$dLexRwU7iwgCarUD/ZXRne4/pKsuW5aLA..FijeLpHlSK8g1Y/1qy',
+                form.password.data)) or check_password_hash(user.password,
+                form.password.data):
                 login_user(user)
                 flash("You've been logged in!", "success")
                 return redirect(url_for('index'))
             else:
-                flash("Your email or password doesn't match!", category="error")
+                flash("Your email or password doesn't match!",
+                category="error")
     return render_template('login.html', form=form)
 
 
@@ -107,7 +109,7 @@ def logout():
 @app.route('/entries')
 def index():
     """Homepage route"""
-    stream = models.Journal.select().order_by(models. \
+    stream = models.Journal.select().order_by(models.
     Journal.date_updated.desc())
     return render_template('index.html', stream=stream)
 
@@ -115,7 +117,7 @@ def index():
 @app.route('/tag/<tag>')
 def retrieve_by_tag(tag):
     """Tag route"""
-    stream = models.Journal.select().where(models.Journal.tags. \
+    stream = models.Journal.select().where(models.Journal.tags.
     contains(f"{tag}")).order_by(models.Journal.date_updated.desc())
     return render_template('index.html', stream=stream)
 
@@ -127,7 +129,6 @@ def create_entry():
     form = forms.NewForm()
     if form.validate_on_submit():
         flash("Yay, you made an entry!", "success")
-        #
         models.Journal.add_entry(
         form.title.data.strip(),
         form.date.data,
@@ -145,7 +146,7 @@ def create_entry():
 def detail(id):
     """"Detail route"""
     try:
-        detailed_entry = models.Journal.select().where(models. \
+        detailed_entry = models.Journal.select().where(models.
         Journal.entry_id == id)
     except models.DoesNotExist:
         abort(404)
@@ -222,5 +223,5 @@ if __name__ == '__main__':
     except ValueError:
         pass
 
-    #start application with specified parameters
+    # start application with specified parameters
     app.run(debug=DEBUG, host=HOST, port=PORT, use_reloader=False)
