@@ -4,11 +4,13 @@
 from flask_wtf import FlaskForm as Form
 from wtforms import StringField, PasswordField, IntegerField, TextAreaField
 from wtforms.validators import (DataRequired, Regexp, ValidationError, Email,
-                               Length, EqualTo)
+                                Length, EqualTo)
 
 from models import User
 
-#The register and login code is based on the Treehouse course building a social network with Flask
+
+# The register and login code is based on the Treehouse course
+# Building a social network with Flask
 def name_exists(form, field):
     """Check if username already in database"""
     if User.select().where(User.username == field.data).exists():
@@ -63,8 +65,10 @@ class LoginForm(Form):
 class NewForm(Form):
     """New entry form"""
     title = StringField("title", validators=[DataRequired()])
-    date  = StringField("Date", validators=[DataRequired()])
-    time_spent = IntegerField("Time spent (hours as int)", validators=[DataRequired()])
+    date = StringField("Date", validators=[DataRequired()])
+    time_spent = IntegerField("Time spent (hours as int)",
+                              validators=[DataRequired()])
     what_you_learned = TextAreaField("Learned", validators=[DataRequired()])
-    resources_to_remember = TextAreaField("To Remember", validators=[DataRequired()])
+    resources_to_remember = TextAreaField("To Remember",
+                                          validators=[DataRequired()])
     tags = StringField("tags (as csv)", validators=[DataRequired()])

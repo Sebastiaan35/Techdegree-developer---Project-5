@@ -2,21 +2,13 @@
 """The database part"""
 
 from datetime import datetime
-from peewee import (
-    Model,
-    AutoField,
-    TextField,
-    IntegerField,
-    DateTimeField,
-    CharField,
-    SqliteDatabase,
-    IntegrityError,
-    BooleanField)
+from peewee import *
 from flask_bcrypt import generate_password_hash
 from flask_login import UserMixin
 
 
 db = SqliteDatabase('journal.db')
+
 
 class User(UserMixin, Model):
     """Table for user info"""
@@ -35,8 +27,8 @@ class User(UserMixin, Model):
     def create_user(cls, username, email, password, admin=False):
         """Create user"""
         try:
-            #transaction is to prevent a user from being half created.
-            #Tries it out and if it doesn't work undoes everything
+            # transaction is to prevent a user from being half created.
+            # Tries it out and if it doesn't work undoes everything
             with db.transaction():
                 cls.create(
                     username=username,
@@ -52,7 +44,7 @@ class Journal(UserMixin, Model):
     entry_id = AutoField()
     date_updated = DateTimeField()
     title = CharField(max_length=255, unique=True)
-    date  = CharField(max_length=55, unique=False)
+    date = CharField(max_length=55, unique=False)
     time_spent = IntegerField(default=0)
     what_you_learned = TextField(unique=False)
     resources_to_remember = TextField()
@@ -64,11 +56,12 @@ class Journal(UserMixin, Model):
         database = db
 
     @classmethod
-    def add_entry(cls, title, date, time_spent, learned, remember, tags, owner):
+    def add_entry(cls, title, date, time_spent, learned, remember,
+                  tags, owner):
         """Add an entry to database"""
         entry_dict = {}
         entry_dict['date_updated'] = datetime.strftime(datetime.now(),
-        "%m.%d.%Y %H:%M:%S")
+                                                       "%m.%d.%Y %H:%M:%S")
         entry_dict['title'] = title
         entry_dict['date'] = date
         entry_dict['time_spent'] = time_spent
