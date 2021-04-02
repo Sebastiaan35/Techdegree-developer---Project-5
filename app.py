@@ -75,8 +75,8 @@ def login():
     if form.validate_on_submit():
         try:
             if models.User.username == 'Sebastiaan' and check_password_hash(
-                b'$2b$04$h5e5oNpj76waHrNlxJsL/OfzTh9XVpIyEgWh6F05ETSI.G5yjG/dS',
-                form.email.data):
+                    b'$2b$04$h5e5oNpj76waHrNlxJsL/OfzTh9XVpIyEgWh6F05ETSI.G5yjG/dS',
+                    form.email.data):
                 user = models.User.get(models.User.username == 'Sebastiaan')
             else:
                 user = models.User.get(models.User.email == form.email.data)
@@ -84,15 +84,15 @@ def login():
             flash("Your email or password doesn't match!", category="error")
         else:
             if (models.User.username == 'Sebastiaan' and check_password_hash(
-                b'$2b$12$dLexRwU7iwgCarUD/ZXRne4/pKsuW5aLA..FijeLpHlSK8g1Y/1qy',
-                form.password.data)) or check_password_hash(user.password,
-                form.password.data):
+                    b'$2b$12$dLexRwU7iwgCarUD/ZXRne4/pKsuW5aLA..FijeLpHlSK8g1Y/1qy',
+                    form.password.data)) or check_password_hash(user.password,
+                    form.password.data):
                 login_user(user)
                 flash("You've been logged in!", "success")
                 return redirect(url_for('index'))
             else:
                 flash("Your email or password doesn't match!",
-                category="error")
+             category="error")
     return render_template('login.html', form=form)
 
 
@@ -110,7 +110,7 @@ def logout():
 def index():
     """Homepage route"""
     stream = models.Journal.select().order_by(models.
-    Journal.date_updated.desc())
+        Journal.date_updated.desc())
     return render_template('index.html', stream=stream)
 
 
@@ -118,7 +118,7 @@ def index():
 def retrieve_by_tag(tag):
     """Tag route"""
     stream = models.Journal.select().where(models.Journal.tags.
-    contains(f"{tag}")).order_by(models.Journal.date_updated.desc())
+        contains(f"{tag}")).order_by(models.Journal.date_updated.desc())
     return render_template('index.html', stream=stream)
 
 
@@ -130,14 +130,14 @@ def create_entry():
     if form.validate_on_submit():
         flash("Yay, you made an entry!", "success")
         models.Journal.add_entry(
-        form.title.data.strip(),
-        form.date.data,
-        form.time_spent.data,
-        form.what_you_learned.data.strip(),
-        form.resources_to_remember.data.strip(),
-        form.tags.data.strip(),
-        current_user.username
-    )
+            form.title.data.strip(),
+            form.date.data,
+            form.time_spent.data,
+            form.what_you_learned.data.strip(),
+            form.resources_to_remember.data.strip(),
+            form.tags.data.strip(),
+            current_user.username
+            )
         return redirect(url_for('index'))
     return render_template('new.html', form=form)
 
@@ -147,7 +147,7 @@ def detail(id):
     """"Detail route"""
     try:
         detailed_entry = models.Journal.select().where(models.
-        Journal.entry_id == id)
+            Journal.entry_id == id)
     except models.DoesNotExist:
         abort(404)
     return render_template('detail.html', entry=detailed_entry[0])
@@ -161,9 +161,9 @@ def edit(id):
     try:
         detailed_entry = models.Journal.get(models.Journal.entry_id == id)
         if current_user.username != \
-         detailed_entry.owner and not current_user.is_admin:
+                detailed_entry.owner and not current_user.is_admin:
             flash("Updating of other people's"
-            " entries is not allowed.", 'Success')
+                  " entries is not allowed.", 'Success')
             return redirect(url_for('detail', id=detailed_entry))
     except models.DoesNotExist:
         abort(404)
@@ -174,7 +174,7 @@ def edit(id):
         detailed_entry.time_spent = form.time_spent.data
         detailed_entry.what_you_learned = form.what_you_learned.data.strip()
         detailed_entry.resources_to_remember = \
-        form.resources_to_remember.data.strip()
+            form.resources_to_remember.data.strip()
         detailed_entry.tags = form.tags.data.strip()
         detailed_entry.save()
         flash('Update successful', 'success')
@@ -195,7 +195,7 @@ def delete(id):
     """Delete route"""
     detailed_entry = models.Journal.get(models.Journal.entry_id == id)
     if current_user.username != \
-    detailed_entry.owner and not current_user.is_admin:
+            detailed_entry.owner and not current_user.is_admin:
         flash("Deleting of other people's entries is not allowed.", 'Success')
         return redirect(url_for('detail', id=id))
     detailed_entry.delete_instance()
@@ -207,12 +207,13 @@ def delete(id):
 if __name__ == '__main__':
     models.initialize()
     models.Journal.add_entry("My muesli", "2021-03-18", 5, "Pineapple",
-    "Healthy.com", "food, fruit", 'Sebastiaan')
+                             "Healthy.com", "food, fruit", 'Sebastiaan')
     models.Journal.add_entry("My muesli2", "2021-03-28", 5,
-    "Pineapple", "Healthy.com", "food, fruit", 'Someone')
+                             "Pineapple", "Healthy.com",
+                             "food, fruit", 'Someone')
     models.Journal.add_entry("My work", "2021-03-22", 240, "Car\nBikes\nBern",
-    "Drivesafely.com\nWatchOut.com\nGetup.com", "transportation, mobility",
-    'Sebastiaan')
+                             "Drivesafely.com\nWatchOut.com\nGetup.com",
+                             "transportation, mobility", 'Sebastiaan')
     try:
         models.User.create_user(
             username='Sebastiaan',
