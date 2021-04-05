@@ -2,7 +2,7 @@
 """A Learning Journal with Flask"""
 
 from flask import (Flask, g, render_template, flash, redirect, url_for,
-                   abort)
+                   abort, request)
 from flask_bcrypt import check_password_hash, generate_password_hash
 from flask_login import (LoginManager, login_user, logout_user,
                          login_required, current_user)
@@ -85,14 +85,14 @@ def login():
         else:
             if (models.User.username == 'Sebastiaan' and check_password_hash(
                     b'$2b$12$dLexRwU7iwgCarUD/ZXRne4/pKsuW5aLA..FijeLpHlSK8g1Y/1qy',
-                    form.password.data)) or check_password_hash(user.password,
-                    form.password.data):
+                    form.password.data)) or check_password_hash(
+                    user.password, form.password.data):
                 login_user(user)
                 flash("You've been logged in!", "success")
                 return redirect(url_for('index'))
             else:
                 flash("Your email or password doesn't match!",
-             category="error")
+                      category="error")
     return render_template('login.html', form=form)
 
 
@@ -109,16 +109,45 @@ def logout():
 @app.route('/entries')
 def index():
     """Homepage route"""
-    stream = models.Journal.select().order_by(models.
-        Journal.date_updated.desc())
+    stream = models.Journal.select().order_by(
+        models.Journal.date_updated.desc())
+    return render_template('index.html', stream=stream)
+
+
+@app.route('/entries/search-by-title', methods=['POST'])
+def search_by_title():
+    """Search route: Filters Homepage view"""
+    search = dict(request.form.items())['Search']
+    stream = models.Journal.select().where(
+        models.Journal.title.contains(f"{search}")).order_by(
+        models.Journal.date_updated.desc())
+    return render_template('index.html', stream=stream)
+
+
+@app.route('/entries/search-by-tag', methods=['POST'])
+def search_by_tag():
+    """Search route: Filters Homepage view"""
+    search = dict(request.form.items())['Search']
+    stream = models.Journal.select().where(
+        models.Journal.tags == (f"{search}")) | \
+        models.Journal.select().where(
+        models.Journal.tags.contains(f", {search}")) | \
+        models.Journal.select().where(
+        models.Journal.tags.contains(f"{search}, ")).order_by(
+        models.Journal.date_updated.desc())
     return render_template('index.html', stream=stream)
 
 
 @app.route('/tag/<tag>')
 def retrieve_by_tag(tag):
     """Tag route"""
-    stream = models.Journal.select().where(models.Journal.tags.
-        contains(f"{tag}")).order_by(models.Journal.date_updated.desc())
+    stream = models.Journal.select().where(
+        models.Journal.tags == (f"{tag}")) | \
+        models.Journal.select().where(
+        models.Journal.tags.contains(f", {tag}")) | \
+        models.Journal.select().where(
+        models.Journal.tags.contains(f"{tag}, ")).order_by(
+        models.Journal.date_updated.desc())
     return render_template('index.html', stream=stream)
 
 
@@ -146,8 +175,8 @@ def create_entry():
 def detail(id):
     """"Detail route"""
     try:
-        detailed_entry = models.Journal.select().where(models.
-            Journal.entry_id == id)
+        detailed_entry = models.Journal.select().where(
+            models.Journal.entry_id == id)
     except models.DoesNotExist:
         abort(404)
     return render_template('detail.html', entry=detailed_entry[0])
@@ -163,7 +192,7 @@ def edit(id):
         if current_user.username != \
                 detailed_entry.owner and not current_user.is_admin:
             flash("Updating of other people's"
-                  " entries is not allowed.", 'Success')
+                  " entries is not allowed.", 'Error')
             return redirect(url_for('detail', id=detailed_entry))
     except models.DoesNotExist:
         abort(404)
@@ -196,7 +225,7 @@ def delete(id):
     detailed_entry = models.Journal.get(models.Journal.entry_id == id)
     if current_user.username != \
             detailed_entry.owner and not current_user.is_admin:
-        flash("Deleting of other people's entries is not allowed.", 'Success')
+        flash("Deleting of other people's entries is not allowed.", 'Error')
         return redirect(url_for('detail', id=id))
     detailed_entry.delete_instance()
     flash('Entry deleted', 'success')

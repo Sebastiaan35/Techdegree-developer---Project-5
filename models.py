@@ -61,7 +61,7 @@ class Journal(UserMixin, Model):
         """Add an entry to database"""
         entry_dict = {}
         entry_dict['date_updated'] = datetime.strftime(datetime.now(),
-                                                       "%m.%d.%Y %H:%M:%S")
+                                                       "%d.%m.%Y %H:%M:%S")
         entry_dict['title'] = title
         entry_dict['date'] = date
         entry_dict['time_spent'] = time_spent

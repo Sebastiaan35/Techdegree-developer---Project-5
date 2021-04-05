@@ -58,17 +58,21 @@ class RegisterForm(Form):
 
 class LoginForm(Form):
     """The login form"""
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(
+        message='Please fill in an email address.'), Email(
+        message='This is not a valid email address.')])
+    password = PasswordField('Password', validators=[DataRequired(
+        message='Please fill in a password.')])
 
 
 class NewForm(Form):
     """New entry form"""
     title = StringField("title", validators=[DataRequired()])
     date = StringField("Date", validators=[DataRequired()])
-    time_spent = IntegerField("Time spent (hours as int)",
+    time_spent = IntegerField("Time spent (hours as a whole number)",
                               validators=[DataRequired()])
     what_you_learned = TextAreaField("Learned", validators=[DataRequired()])
     resources_to_remember = TextAreaField("To Remember",
                                           validators=[DataRequired()])
-    tags = StringField("tags (as csv)", validators=[DataRequired()])
+    tags = StringField("Keywords - Separated by ', ' (comma and space)",
+                       validators=[DataRequired()])
