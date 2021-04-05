@@ -42,9 +42,9 @@ class User(UserMixin, Model):
 class Journal(UserMixin, Model):
     """Define product categories"""
     entry_id = AutoField()
-    date_updated = DateTimeField()
+    date_created = DateTimeField()
     title = CharField(max_length=255, unique=True)
-    date = CharField(max_length=55, unique=False)
+    date = DateField()
     time_spent = IntegerField(default=0)
     what_you_learned = TextField(unique=False)
     resources_to_remember = TextField()
@@ -60,7 +60,7 @@ class Journal(UserMixin, Model):
                   tags, owner):
         """Add an entry to database"""
         entry_dict = {}
-        entry_dict['date_updated'] = datetime.strftime(datetime.now(),
+        entry_dict['date_created'] = datetime.strftime(datetime.now(),
                                                        "%d.%m.%Y %H:%M:%S")
         entry_dict['title'] = title
         entry_dict['date'] = date

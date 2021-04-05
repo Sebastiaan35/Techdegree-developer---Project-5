@@ -2,7 +2,8 @@
 """The forms part"""
 
 from flask_wtf import FlaskForm as Form
-from wtforms import StringField, PasswordField, IntegerField, TextAreaField
+from wtforms import (StringField, PasswordField, IntegerField, TextAreaField,
+                     DateField)
 from wtforms.validators import (DataRequired, Regexp, ValidationError, Email,
                                 Length, EqualTo)
 
@@ -67,12 +68,14 @@ class LoginForm(Form):
 
 class NewForm(Form):
     """New entry form"""
-    title = StringField("title", validators=[DataRequired()])
-    date = StringField("Date", validators=[DataRequired()])
+    title = StringField("Title", validators=[DataRequired()])
+    date = DateField("Date (dd.mm.yyyy)", format='%d.%m.%Y',
+                     validators=[DataRequired()])
     time_spent = IntegerField("Time spent (hours as a whole number)",
                               validators=[DataRequired()])
     what_you_learned = TextAreaField("Learned", validators=[DataRequired()])
-    resources_to_remember = TextAreaField("To Remember",
-                                          validators=[DataRequired()])
+    resources_to_remember = TextAreaField(
+        "To Remember (Web links need to be placed on separate lines)",
+        validators=[DataRequired()])
     tags = StringField("Keywords - Separated by ', ' (comma and space)",
                        validators=[DataRequired()])

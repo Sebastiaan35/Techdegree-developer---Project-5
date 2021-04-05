@@ -5,7 +5,7 @@
   <div class="entry-list single">
                       <article>
                           <h1>{{ entry.title }}</h1>
-                          <time datetime="{{entry.date}}">{{ entry.date }}</time>
+                          <time datetime="{{entry.date}}">{{ entry.date.strftime('%d.%m.%Y') }}</time>
                           <div class="entry">
                               <h3>Time Spent: </h3>
                               {% if entry.time_spent > 1 %}
@@ -27,8 +27,10 @@
                               <ul>
                                 {% if entry.resources_to_remember %}
                                   {% for line in entry.resources_to_remember.split('\n') %}
-                                    {% if line.find('http') > -1 or line.find('www.') > -1 %}
+                                    {% if line.find('http') > -1 %}
                                       <li><a href="{{ line }}">{{ line }}</a></li>
+                                    {% elif line.find('www.') > -1 %}
+                                      <li><a href="http://{{ line }}">{{ line }}</a></li>
                                     {% else %}
                                       <li>{{ line }}</li>
                                     {% endif %}

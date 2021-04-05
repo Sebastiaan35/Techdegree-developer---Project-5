@@ -110,7 +110,7 @@ def logout():
 def index():
     """Homepage route"""
     stream = models.Journal.select().order_by(
-        models.Journal.date_updated.desc())
+        models.Journal.date.desc())
     return render_template('index.html', stream=stream)
 
 
@@ -120,7 +120,7 @@ def search_by_title():
     search = dict(request.form.items())['Search']
     stream = models.Journal.select().where(
         models.Journal.title.contains(f"{search}")).order_by(
-        models.Journal.date_updated.desc())
+        models.Journal.date.desc())
     return render_template('index.html', stream=stream)
 
 
@@ -134,7 +134,7 @@ def search_by_tag():
         models.Journal.tags.contains(f", {search}")) | \
         models.Journal.select().where(
         models.Journal.tags.contains(f"{search}, ")).order_by(
-        models.Journal.date_updated.desc())
+        models.Journal.date.desc())
     return render_template('index.html', stream=stream)
 
 
@@ -147,7 +147,7 @@ def retrieve_by_tag(tag):
         models.Journal.tags.contains(f", {tag}")) | \
         models.Journal.select().where(
         models.Journal.tags.contains(f"{tag}, ")).order_by(
-        models.Journal.date_updated.desc())
+        models.Journal.date_created.desc())
     return render_template('index.html', stream=stream)
 
 

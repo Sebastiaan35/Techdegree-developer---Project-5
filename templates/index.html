@@ -4,12 +4,14 @@
 {% block search %}
 
 <form method="POST" action="{{ url_for('search_by_title') }}" class="Search">
-  <input type='text' name='Search' class='Search' id='chatinput' placeholder="Search by title" style="
+  <label for="titlesearch">Search by title</label>
+  <input type='text' name='Search' class='Search' id='titlesearch' placeholder="Search by title" style="
     width: 10%;
     position: absolute;">
 </form><br><br><br><br><br><br>
 <form method="POST" action="{{ url_for('search_by_tag') }}" class="Search">
-  <input type='text' name='Search' class='Search' id='chatinput' placeholder="Search by keyword" style="
+   <label for="keysearch">Search by keyword</label>
+  <input type='text' name='Search' class='Search' id='keysearch' placeholder="Search by keyword" style="
     width: 10%;
     position: absolute;">
 </form>
@@ -26,7 +28,7 @@
                   <i><a href="{{ url_for('retrieve_by_tag', tag=tag) }}">{{ tag }}</a></i>
                 {% endfor %}
                 <br><br>
-                <time datetime="{{ entry.date }}">Date: {{ entry.date }}</time> - By: {{ entry.owner }}
+                <time datetime="{{ entry.date }}">Date: {{ entry.date.strftime('%d.%m.%Y') }}</time> - By: {{ entry.owner }}
         </article>
     {% endfor %}
 
